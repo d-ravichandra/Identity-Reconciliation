@@ -17,6 +17,7 @@ const User = sequelize.define('User', {
     },
     linkPrecedence: {
         type: DataTypes.STRING,
+        defaultValue: "primary"
     },
     // createdAt: {
     //     type: DataTypes.DATE,
