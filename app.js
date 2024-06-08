@@ -9,14 +9,14 @@ app.use(express.urlencoded({ extended: true }));
 
 app.post('/identify', (req, res) => {
     const email = req.body.email;
-    const phone = req.body.phone;
+    const phone = req.body.phoneNumber;
     try {
         if(email === null && phone === null) {
             res.send("Invalid request");
         } else {
             dba.process(email, phone).then(records => {
                 responseServiceInstance.response(records).then((result) => {
-                    res.send(JSON.stringify(result));
+                    res.send(result);
                 });
             });
         }

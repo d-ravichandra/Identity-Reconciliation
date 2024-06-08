@@ -9,6 +9,7 @@ const responseServiceInstance = {
                 phoneNumbers: [],
                 secondaryContactIds: []
             };
+
             for(let user of records) {
                 if(user.linkPrecedence === 'primary') {
                     contact.primaryContactId = user.id;
@@ -16,6 +17,10 @@ const responseServiceInstance = {
                     contact.phoneNumbers.unshift(user.phoneNumber);
                 } else {
                     contact.secondaryContactIds.push(user.id);
+                    if(!contact.emails.includes(user.email))
+                        contact.emails.push(user.email);
+                    if(!contact.phoneNumbers.includes(user.phoneNumber))
+                        contact.phoneNumbers.push(user.phoneNumber);
                 }
             }
             return { "contact" : contact };
