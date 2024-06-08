@@ -17,17 +17,44 @@ const dba = {
         }
     },
 
+    process: async function(email, phoneNumber) {
+        try {
+            const records = await this.fetch(email, phoneNumber);
+            if(records === undefined || records.length == 0) {
+                //  there is no complete match
+                //  There may still exist a primary record with partial match
+                const [isPartialMatch, partialMatchedRecords] = await this.fetchOnPartialMatch(email, phoneNumber);
+                if(isPartialMatch) {
+                    console.log('This is a partial match');
+                    return partialMatchedRecords;
+                } else {
+                    //  the request is a primary record
+                    const newUser = this.create(email, phoneNumber);
+                    return [newUser];
+                }
+            } 
+            return records;
+        } catch(error) {
+            console.error("some error occured: ", error);
+        }
+    },
+
     fetch: async function(email, phoneNumber) {
         try {
+            const result = [];
             const records = await User.findAll({
                 where: {
-                    [Op.or] : [
+                    [Op.and] : [
                         {email: email},
                         {phoneNumber: phoneNumber}
                     ]
                 }
+            }).then(users => {
+                users.forEach(user => {
+                    result.push(user);
+                })
             });
-            return records;
+            return result;
         } catch(error) {
             console.error('error retrieving users from the database: ', error);
         }
@@ -35,19 +62,38 @@ const dba = {
 
     create: async function(email, phoneNumber) {
         try {
-            const records = await this.fetch(email, phoneNumber);
             const id = kgs.getId();
-            console.log(records);
-            //  create a new record if it does not exist already
-            if(records === undefined || records.length == 0) {
-                const newUser = User.create({
-                    id,
-                    email,
-                    phoneNumber,
-                });
-            }
+            const newUser = User.create({
+                id,
+                email,
+                phoneNumber,
+            });
+            return [newUser];
         } catch(error) {
-            console.log('error creating record: ', error);
+            console.error('error creating record: ', error);
+        }
+    },
+
+    fetchOnPartialMatch: async function(email, phoneNumber) {
+        try {
+            const result = [];
+            const records = await User.findAll({
+                where: {
+                    [Op.or] : [
+                        {email: email},
+                        {phoneNumber: phoneNumber}
+                    ]
+                }
+            }).then(users => {
+                users.forEach(user => {
+                    result.add(user);
+                });
+            });
+            if(records === undefined || records.length == 0)
+                return [false, []];
+            return [true, result];
+        } catch (error) {
+            console.error('error obtaining records from the db: ', error);
         }
     }
 
